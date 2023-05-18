@@ -13,7 +13,7 @@ class VehicleType(Enum):
     SUV = "Sub-Urban Vehicle"
     VAN = "Van"
     HIGH_ROOF = "High Roof"
-    MOTORCYCLE = "Moto cycle/Scooter"
+    MOTORCYCLE = "Motor cycle/Scooter"
 
     def __str__(self):
         return self.value
