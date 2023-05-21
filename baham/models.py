@@ -24,15 +24,15 @@ class UserProfile(models.Model):
     gender = models.CharField(max_length=1, choices=[('M', 'Male'), ('F', 'Female')])
     type = models.CharField(max_length=10, choices=[(t.name, t.value) for t in UserType])
     primary_contact = models.CharField(max_length=20, null=False, blank=False)
-    alternate_contact = models.CharField(max_length=20, null=True)
-    address = models.CharField(max_length=255)
-    address_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True)
-    address_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True)
+    alternate_contact = models.CharField(max_length=20, null=True, blank=True)
+    address = models.CharField(max_length=255, blank=True)
+    address_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    address_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     landmark = models.CharField(max_length=255, null=False)
     town = models.CharField(max_length=50, null=False, choices=[(c, c) for c in TOWNS])
     active = models.BooleanField(default=True, editable=False)
     date_deactivated = models.DateTimeField(editable=False, null=True)
-    bio = models.TextField()
+    bio = models.TextField(null=True, blank=True)
     # Audit fields
     date_created = models.DateTimeField(default=timezone.now, null=False, editable=False)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, editable=False, related_name='userprofile_creator')
@@ -41,11 +41,11 @@ class UserProfile(models.Model):
     voided = models.BooleanField(default=False, null=False)
     date_voided = models.DateTimeField(null=True)
     voided_by = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='userprofile_voider')
-    void_reason = models.CharField(null=True, max_length=1024)
+    void_reason = models.CharField(null=True, max_length=1024, blank=True)
     uuid = models.UUIDField(default=uuid4, editable=False, unique=True)
 
     def __str__(self):
-        return f"{self.username} {self.first_name} {self.last_name}"
+        return self.user.username
     
     def update(self, updated_by=None, *args, **kwargs):
         self.date_updated = timezone.now()
@@ -95,7 +95,7 @@ class VehicleModel(models.Model):
     voided = models.BooleanField(default=False, null=False)
     date_voided = models.DateTimeField(null=True)
     voided_by = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='vehiclemodel_voider')
-    void_reason = models.CharField(null=True, max_length=1024)
+    void_reason = models.CharField(null=True, max_length=1024, blank=True)
     uuid = models.UUIDField(default=uuid4, editable=False, unique=True)
 
     class Meta:
@@ -152,7 +152,7 @@ class Vehicle(models.Model):
     voided = models.BooleanField(default=False, null=False)
     date_voided = models.DateTimeField(null=True)
     voided_by = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='vehicle_voider')
-    void_reason = models.CharField(null=True, max_length=1024)
+    void_reason = models.CharField(null=True, max_length=1024, blank=True)
     uuid = models.UUIDField(default=uuid4, editable=False, unique=True)
 
     def __str__(self):
@@ -205,7 +205,7 @@ class Contract(models.Model):
     voided = models.BooleanField(default=False, null=False)
     date_voided = models.DateTimeField(null=True)
     voided_by = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='contract_voider')
-    void_reason = models.CharField(null=True, max_length=1024)
+    void_reason = models.CharField(null=True, max_length=1024, blank=True)
     uuid = models.UUIDField(default=uuid4, editable=False, unique=True)
     
     def __str__(self):
