@@ -155,3 +155,111 @@ def update_vehicle(request):
     return HttpResponseRedirect(reverse('vehicles'))
 
 
+#### REST API ####
+def get_csrf_token(request):
+    csrf_token = csrf.get_token(request)
+    return JsonResponse({'csrf_token': csrf_token})
+
+
+def get_all_vehicle_models(request):
+    if request.method == 'GET':
+        vehicle_models = VehicleModel.objects.all()
+        data = [
+        ]
+        for model in vehicle_models:
+            data.append({
+                'uuid': model.uuid,
+                'vendor': model.vendor,
+                'model': model.model,
+                'type': model.type,
+                'date_created': model.date_created,
+                'created_by': str(model.created_by),
+            })
+        return JsonResponse({'results': data})
+
+
+def get_vehicle_model_by_uuid(request, uuid):
+    if request.method == 'GET':
+        model = VehicleModel.objects.filter(uuid=uuid).first()
+        data = {
+            'uuid': model.uuid,
+            'vendor': model.vendor,
+            'model': model.model,
+            'type': model.type,
+            'capacity': model.capacity,
+            'date_created': model.date_created,
+            'created_by': str(model.created_by),
+            'date_updated': model.date_updated,
+            'updated_by': str(model.updated_by),
+            'voided': model.voided,
+            'date_voided': model.date_voided,
+            'voided_by': str(model.voided_by),
+            'void_reason': model.void_reason,
+        }
+        return JsonResponse({'results': data})
+
+
+def create_vehicle_model(request):
+    if request.method == 'POST':
+        _vendor = request.POST.get('vendor')
+        _model = request.POST.get('model')
+        _type = request.POST.get('type')
+        _capacity = request.POST.get('capacity')
+        print (_vendor + _model + _type)
+        vehicle_model = VehicleModel.objects.create(vendor=_vendor, model=_model, type=_type, capacity=_capacity)
+        response_data = {
+            'message': 'Vehicle model created successfully',
+            'uuid': vehicle_model.uuid,
+        }
+        return JsonResponse(response_data, status=201)
+    response_data = {
+        'error': 'Invalid request method',
+    }
+    return JsonResponse(response_data, status=405)
+
+
+def update_vehicle_model(request, uuid):
+    if request.method == 'PUT':
+        _vendor = request.POST.get('vendor')
+        _model = request.POST.get('model')
+        _type = request.POST.get('type')
+        _capacity = request.POST.get('capacity')
+        vehicle_model = VehicleModel.objects.filter(uuid=uuid).first()
+        if not vehicle_model:
+            response_data = {
+                'error': 'Vehicle model not found',
+            }
+            return JsonResponse(response_data, status=404)
+        vehicle_model.vendor = _vendor
+        vehicle_model.model = _model
+        vehicle_model.type = _type
+        vehicle_model.capacity = _capacity
+        vehicle_model.update(updated_by=request.user)
+        response_data = {
+            'message': 'Vehicle model updated successfully',
+            'uuid': vehicle_model.uuid,
+        }
+        return JsonResponse(response_data)
+    response_data = {
+        'error': 'Invalid request method',
+    }
+    return JsonResponse(response_data, status=405)
+
+
+def delete_vehicle_model(request, uuid):
+    if request.method == 'DELETE':
+        vehicle_model = VehicleModel.objects.filter(uuid=uuid).first()
+        if not vehicle_model:
+            response_data = {
+                'error': 'Vehicle model not found',
+            }
+            return JsonResponse(response_data, status=404)
+        vehicle_model.delete(voided_by=request.user)
+        response_data = {
+            'message': 'Vehicle model deleted successfully',
+        }
+        return JsonResponse(response_data)
+    response_data = {
+        'error': 'Invalid request method',
+    }
+    return JsonResponse(response_data, status=405)
