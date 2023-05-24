@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 from uuid import uuid4
+import re
 
 from baham.constants import COLOURS, TOWNS
 from baham.enum_types import VehicleType, VehicleStatus, UserType
@@ -11,9 +12,10 @@ from baham.enum_types import VehicleType, VehicleStatus, UserType
 # Custom validators
 def validate_colour(value):
     '''
-    Validate that the value exists in the list of available colours
+    Validate that the value is a valid colour code
     '''
-    return value.upper() in COLOURS
+    regex = "^#[0-9a-fA-F]{6}$"
+    return re.fullmatch(regex, value)
 
 
 # Create your models here.
@@ -46,6 +48,13 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.username
+    
+    def save(self, created_by=None, *args, **kwargs):
+        self.date_created = timezone.now()
+        if not created_by:
+            created_by = User.objects.get(pk=1)
+        self.created_by = created_by
+        super().save()
     
     def update(self, updated_by=None, *args, **kwargs):
         self.date_updated = timezone.now()
@@ -104,6 +113,13 @@ class VehicleModel(models.Model):
     def __str__(self):
         return f"{self.vendor} {self.model}"
     
+    def save(self, created_by=None, *args, **kwargs):
+        self.date_created = timezone.now()
+        if not created_by:
+            created_by = User.objects.get(pk=1)
+        self.created_by = created_by
+        super().save()
+    
     def update(self, updated_by=None, *args, **kwargs):
         self.date_updated = timezone.now()
         if (not updated_by):
@@ -158,6 +174,13 @@ class Vehicle(models.Model):
     def __str__(self):
         return f"{self.model.vendor} {self.model.model} {self.colour}"
     
+    def save(self, created_by=None, *args, **kwargs):
+        self.date_created = timezone.now()
+        if not created_by:
+            created_by = User.objects.get(pk=1)
+        self.created_by = created_by
+        super().save()
+    
     def update(self, updated_by=None, *args, **kwargs):
         self.date_updated = timezone.now()
         if (not updated_by):
@@ -173,7 +196,7 @@ class Vehicle(models.Model):
         if (not voided_by):
             voided_by = User.objects.get(pk=1)
         self.voided_by = voided_by
-        self.save()
+        super().save()
     
     def undelete(self, *args, **kwargs):
         if self.voided:
@@ -210,6 +233,13 @@ class Contract(models.Model):
     
     def __str__(self):
         return f"{self}" # TODO: Complete this
+    
+    def save(self, created_by=None, *args, **kwargs):
+        self.date_created = timezone.now()
+        if not created_by:
+            created_by = User.objects.get(pk=1)
+        self.created_by = created_by
+        super().save()
     
     def update(self, updated_by=None, *args, **kwargs):
         self.date_updated = timezone.now()
