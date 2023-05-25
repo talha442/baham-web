@@ -1,11 +1,11 @@
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest
+import json
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, JsonResponse, QueryDict
 from django.template import loader
 from django.urls import reverse
 from django.contrib import auth
 from django.contrib.auth.models import User
 from django.db.models import Q
-from django.http import JsonResponse
-from django.middleware import csrf
+from django.middleware.csrf import get_token
 
 from baham.enum_types import VehicleStatus, VehicleType
 from baham.models import Vehicle, VehicleModel, validate_colour
@@ -154,18 +154,18 @@ def update_vehicle(request):
     vehicle_model.update(update_by=request.user)
     return HttpResponseRedirect(reverse('vehicles'))
 
-
-#### REST API ####
+#############
+### REST ####
+#############
 def get_csrf_token(request):
-    csrf_token = csrf.get_token(request)
+    csrf_token = get_token(request)
     return JsonResponse({'csrf_token': csrf_token})
 
 
 def get_all_vehicle_models(request):
     if request.method == 'GET':
         vehicle_models = VehicleModel.objects.all()
-        data = [
-        ]
+        data = []
         for model in vehicle_models:
             data.append({
                 'uuid': model.uuid,
@@ -176,9 +176,11 @@ def get_all_vehicle_models(request):
                 'created_by': str(model.created_by),
             })
         return JsonResponse({'results': data})
+    else:
+        return JsonResponse({'error': 'Invalid endpoint or method type'}, status=400)
 
 
-def get_vehicle_model_by_uuid(request, uuid):
+def get_vehicle_model(request, uuid):
     if request.method == 'GET':
         model = VehicleModel.objects.filter(uuid=uuid).first()
         data = {
@@ -197,6 +199,8 @@ def get_vehicle_model_by_uuid(request, uuid):
             'void_reason': model.void_reason,
         }
         return JsonResponse({'results': data})
+    else:
+        return JsonResponse({'error': 'Invalid endpoint or method type'}, status=400)
 
 
 def create_vehicle_model(request):
@@ -205,25 +209,23 @@ def create_vehicle_model(request):
         _model = request.POST.get('model')
         _type = request.POST.get('type')
         _capacity = request.POST.get('capacity')
-        print (_vendor + _model + _type)
         vehicle_model = VehicleModel.objects.create(vendor=_vendor, model=_model, type=_type, capacity=_capacity)
         response_data = {
             'message': 'Vehicle model created successfully',
             'uuid': vehicle_model.uuid,
         }
         return JsonResponse(response_data, status=201)
-    response_data = {
-        'error': 'Invalid request method',
-    }
-    return JsonResponse(response_data, status=405)
+    else:
+        return JsonResponse({'error': 'Invalid endpoint or method type'}, status=400)
 
 
 def update_vehicle_model(request, uuid):
     if request.method == 'PUT':
-        _vendor = request.POST.get('vendor')
-        _model = request.POST.get('model')
-        _type = request.POST.get('type')
-        _capacity = request.POST.get('capacity')
+        params = QueryDict(request.body)
+        _vendor = params.get('vendor')
+        _model = params.get('model')
+        _type = params.get('type')
+        _capacity = params.get('capacity')
         vehicle_model = VehicleModel.objects.filter(uuid=uuid).first()
         if not vehicle_model:
             response_data = {
@@ -234,16 +236,14 @@ def update_vehicle_model(request, uuid):
         vehicle_model.model = _model
         vehicle_model.type = _type
         vehicle_model.capacity = _capacity
-        vehicle_model.update(updated_by=request.user)
+        vehicle_model.update()
         response_data = {
             'message': 'Vehicle model updated successfully',
             'uuid': vehicle_model.uuid,
         }
-        return JsonResponse(response_data)
-    response_data = {
-        'error': 'Invalid request method',
-    }
-    return JsonResponse(response_data, status=405)
+        return JsonResponse(response_data, status=200)
+    else:
+        return JsonResponse({'error': 'Invalid endpoint or method type'}, status=400)
 
 
 def delete_vehicle_model(request, uuid):
@@ -254,12 +254,10 @@ def delete_vehicle_model(request, uuid):
                 'error': 'Vehicle model not found',
             }
             return JsonResponse(response_data, status=404)
-        vehicle_model.delete(voided_by=request.user)
+        vehicle_model.delete()
         response_data = {
-            'message': 'Vehicle model deleted successfully',
+            'message': 'Vehicle model voided successfully'
         }
-        return JsonResponse(response_data)
-    response_data = {
-        'error': 'Invalid request method',
-    }
-    return JsonResponse(response_data, status=405)
+        return JsonResponse(response_data, status=200)
+    else:
+        return JsonResponse({'error': 'Invalid endpoint or method type'}, status=400)

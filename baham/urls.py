@@ -15,12 +15,11 @@ urlpatterns = [
     path('baham/vehicles/edit/update/', views.update_vehicle, name='updatedvehicle'),
     path('baham/aboutus', views.view_aboutus, name='aboutus'),
     
-    # REST API
-    path('api/get_csrf_token', views.get_csrf_token, name='get_csrf_token'),
-    path('api/get/vehicles', views.get_all_vehicle_models, name='get_all_vehicles'),
-    path('api/get/vehicles/<str:uuid>', views.get_vehicle_model_by_uuid, name='get_vehicle_model_by_uuid'),
-    path('api/create/vehicles', views.create_vehicle_model, name='create_vehicle_model'),
-    path('api/updated/vehicles/<str:uuid>', views.update_vehicle_model, name='update_vehicle_model'),
-    path('api/delete/vehicles/<str:uuid>', views.delete_vehicle_model, name='delete_vehicle_model'),
-
+    ### REST API ###
+    path('api/csrftoken', views.get_csrf_token, name='get_csrf_token'),
+    path('api/get/vehiclemodels', views.get_all_vehicle_models, name='get_all_vehicle_models'),
+    path('api/get/vehiclemodel/<str:uuid>', views.get_vehicle_model, name='get_vehicle_model'),
+    path('api/create/vehiclemodel', views.create_vehicle_model, name='create_vehicle_model'),
+    path('api/update/vehiclemodel/<str:uuid>', views.update_vehicle_model, name='update_vehicle_model'),
+    path('api/delete/vehiclemodel/<str:uuid>', views.delete_vehicle_model, name='delete_vehicle_model'),
 ]
